@@ -1,6 +1,6 @@
 # Notice
 
-This repository documents an automation system built for **White-Label / Agency Delivery** (E-commerce & Local Business) by **Saad / ScaleWithAIBD**.
+This repository documents an automation system built for **White-Label / Agency Delivery** (E-commerce & Local Business) by **Sayad / Sayad**.
 
 - The workflow file in `/workflows` is a **sanitized skeleton** for demonstration purposes only.
 - All client credentials, API keys, business data, and proprietary business logic have been **removed or replaced with placeholders**.
