@@ -1,3 +1,8 @@
+<div align="center">
+  <img src="assets/banner.svg" width="100%" alt="⭐ White-Label Review Outreach Pipeline — banner"/>
+</div>
+
+
 # ⭐ White-Label Review Outreach Pipeline
 
 ![Status: Delivered](https://img.shields.io/badge/Status-Delivered-FF00FF?style=for-the-badge)
