@@ -10,10 +10,10 @@
 **Client:** Marketing Agency | **Industry:** E-commerce | **Delivered by:** K MD SAYAD RAHMAN (Sayad.dev | AI Automation)
 
 <!-- Professional Banner -->
-<img src="assets/banners/ecommerce-banner.svg" alt="E-commerce Review Automation" width="1200" style="border-radius: 10px; margin: 20px 0; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+<img src="assets/banners/ecommerce-banner.svg" alt="E-commerce Review Automation" style="width: 100%; max-width: 1200px; height: auto; border-radius: 10px; margin: 20px 0; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
 
 <!-- Interactive Architecture Diagram -->
-[View Interactive Architecture Diagram](assets/diagrams/ecommerce-interactive.html)
+[View Interactive Architecture Diagram](https://raw.githubusercontent.com/mdsadrhoman123-stack/review-outreach-pipeline/main/assets/diagrams/ecommerce-interactive.html)
 
 ---
 
