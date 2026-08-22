@@ -126,31 +126,31 @@ flowchart LR
 ### BEFORE (Manual Outreach - High Risk)
 ```
 [Lead List Obtained] 
-    ↓ (manual import)
+    â†“ (manual import)
 [Manual Deduplication] 
-    ↓ (error-prone)
+    â†“ (error-prone)
 [Generic Message Writing] 
-    ↓ (no personalization)
+    â†“ (no personalization)
 [Manual Sending] 
-    ↓ (slow process)
+    â†“ (slow process)
 [No Quality Control] 
-    ↓
-= **Slow, generic, risk of double-messaging** ❌
+    â†“
+= **Slow, generic, risk of double-messaging** âŒ
 ```
 
 ### AFTER (Automated Pipeline - Quality Assured)
 ```
 [Lead List Obtained] 
-    ↓ (Outscraper integration)
+    â†“ (Outscraper integration)
 [Automated Deduplication] 
-    ↓ (PostgreSQL logic)
+    â†“ (PostgreSQL logic)
 [AI Scoring + Personalization] 
-    ↓ (GPT-4o-mini)
+    â†“ (GPT-4o-mini)
 [Human Approval Gate] 
-    ↓ (Telegram interface)
+    â†“ (Telegram interface)
 [Automated Delivery] 
-    ↓ (Instantly.ai)
-= **Fast, personalized, quality-assured outreach** ✅
+    â†“ (Instantly.ai)
+= **Fast, personalized, quality-assured outreach** âœ…
 ```
 
 **The difference:** AI efficiency with human quality control, ensuring perfect messages every time.
@@ -263,14 +263,14 @@ A: Currently uses Instantly.ai, can be extended to other email platforms.
 
 **K MD SAYAD RAHMAN** - Sayad.dev | AI Automation
 
-**📧 Work Email:** khandokarsayad@gmail.com  
-**📧 Personal Email:** mdsadrhoman123@gmail.com  
-**💼 LinkedIn:** https://linkedin.com/in/khandokarsabbir  
-**🐙 GitHub:** https://github.com/mdsadrhoman123-stack
+**ðŸ“§ Work Email:** khandokarsayad@gmail.com  
+**ðŸ“§ Personal Email:** mdsadrhoman123@gmail.com  
+**ðŸ’¼ LinkedIn:** https://linkedin.com/in/khandokarsabbir  
+**ðŸ™ GitHub:** https://github.com/mdsadrhoman123-stack
 
-**🚀 Open to Work - Accepting New Automation Projects**
+**ðŸš€ Open to Work - Accepting New Automation Projects**
 
-**📩 Email me with your automation challenge - I'll tell you exactly 
+**ðŸ“© Email me with your automation challenge - I'll tell you exactly 
 which part I'd automate first, and which part I wouldn't.**
 
 ---
@@ -288,7 +288,7 @@ which part I'd automate first, and which part I wouldn't.**
 
 **Built by K MD SAYAD RAHMAN (Sayad.dev | AI Automation)**
 
-**📧 Contact:** khandokarsayad@gmail.com | mdsadrhoman123@gmail.com
+**ðŸ“§ Contact:** khandokarsayad@gmail.com | mdsadrhoman123@gmail.com
 
 Copyright (c) 2024 K MD SAYAD RAHMAN. All rights reserved. Portfolio use only.
 
