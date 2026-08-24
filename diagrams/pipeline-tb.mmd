@@ -1,0 +1,17 @@
+flowchart TB
+    in(["Customer records come in"])
+    prep["Cleaned, scored, written up"]
+    ap[/"A person approves it"/]
+    go["Approved → delivered"]
+    hold["Not approved → nothing sends"]
+
+    in --> prep
+    prep --> ap
+    ap --> go
+    ap -.-> hold
+
+    classDef default fill:#F8F7F3,stroke:#12151B,stroke-width:1px,color:#12151B;
+    classDef ok fill:#2F6B52,stroke:#12151B,stroke-width:1px,color:#F5F4EF;
+    classDef bad fill:#FEE2E2,stroke:#DC2626,stroke-width:1.5px,color:#7F1D1D;
+    class go ok;
+    class hold bad;

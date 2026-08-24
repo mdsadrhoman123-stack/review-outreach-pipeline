@@ -1,296 +1,188 @@
-# E-commerce Brands: Scale Review Outreach Without Spam Risk
+<img src="assets/banner.svg" alt="Review Outreach Pipeline — Per-client outreach, human-approved" width="100%">
 
-**Client:** Marketing Agency | **Industry:** E-commerce | **Delivered by:** K MD SAYAD RAHMAN (Sayad.dev | AI Automation)
+# Review Outreach Pipeline
 
-<!-- Professional Banner -->
-<img src="assets/banners/ecommerce-banner.svg" alt="E-commerce Review Automation" style="width: 100%; max-width: 1200px; height: auto; border-radius: 10px; margin: 20px 0; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+**Customer records are cleaned, scored and turned into outreach copy — then a human approves in Telegram before anything sends.**
 
-<!-- Interactive Architecture Diagram -->
-[View Interactive Architecture Diagram](https://raw.githubusercontent.com/mdsadrhoman123-stack/review-outreach-pipeline/main/assets/diagrams/ecommerce-interactive.html)
+![delivered to client](https://img.shields.io/badge/status-delivered%20to%20client-2F6B52?style=flat-square) ![sector](https://img.shields.io/badge/sector-E--commerce%20/%20reviews-12151B?style=flat-square) ![built with](https://img.shields.io/badge/built%20with-n8n-12151B?style=flat-square) ![Workflow nodes](https://img.shields.io/badge/Workflow%20nodes-21-5B6472?style=flat-square)
 
----
-
-## Contents
-
-- [The Problem](#the-problem)
-- [The Solution](#the-solution)
-- [Architecture](#architecture)
-- [How It Works](#how-it-works)
-- [Key Metrics](#key-metrics)
-- [Before/After Comparison](#beforeafter-comparison)
-- [Impact Statement](#impact-statement)
-- [Non-functional Highlights](#non-functional-highlights)
-- [Design Decisions](#design-decisions)
-- [What I'd Improve](#what-id-improve)
-- [Roadmap](#roadmap)
-- [What I'm Not Publishing](#what-im-not-publishing)
-- [FAQ](#faq)
-- [Contact](#contact)
+| | |
+| :--- | :--- |
+| **Built for** | White-label / agency delivery |
+| **Industry** | E-commerce & local business |
+| **Status** | delivered to client |
+| **Role** | Designed, built and deployed end to end |
 
 ---
 
-## The Problem
+### On this page
 
-Marketing agencies often struggle to scale review outreach services without descending into spam. The lack of personalization and the risk of double-messaging customers leads to poor conversion and brand damage. Agencies needed a white-label, scalable solution that combined AI efficiency with human quality control.
-
-**In practical terms:**
-- Manual outreach = **slow and unscalable**
-- Generic messaging = **poor conversion rates**
-- Double-messaging risk = **customer annoyance and brand damage**
-- No quality control = **inconsistent messaging**
-- Client isolation challenges = **white-label complexity**
-
-**The cost:** Poor conversion rates and potential brand damage from spam-like outreach.
+[The problem](#the-problem) · [What changed](#what-changed) · [How it works](#how-it-works) · [When it breaks](#when-it-breaks) · [The stack](#the-stack) · [Limitations](#honest-limitations) · [Read deeper](#read-deeper)
 
 ---
 
-## The Solution
+## The problem
 
-We engineered a 21-node automation pipeline that handles the entire outreach lifecycle-from lead intake to personalized delivery. By incorporating a Telegram-based human approval gate, the system ensures that every message is perfect before it hits a customer's inbox, all while maintaining strict client isolation.
+Agencies wanted a scalable way to turn customer interactions into public reviews without a generic tool that mixes every client's data together.
 
-**Core capabilities:**
-- **21-Node Pipeline:** Comprehensive workflow managing data cleaning, scoring, and delivery
-- **Automated Intake:** Direct integration with Outscraper for high-quality lead generation
-- **Smart Deduplication:** PostgreSQL-driven logic to ensure no customer is ever messaged twice
-- **AI Personalization:** GPT-4o-mini drafts tailored outreach copy based on specific interaction scores
-- **Human Approval Gate:** Telegram interface allowing one-click approval or rejection of AI-drafted copy
-- **White-Label Ready:** Isolated per-client deployments, making it a "productized" service for agencies
+The two failure modes are equally bad: a shared system that leaks one client's records into another's, and copy that reads as obviously automated and gets ignored.
 
----
+So the requirement was per-client isolation and a human approval step — not more volume.
 
-## Architecture
+## What changed
+
+| | Before | After |
+| :--- | :--- | :--- |
+| **Client data** | One shared pool | Isolated infrastructure per client |
+| **Duplicate contact** | Possible and embarrassing | Blocked at the database |
+| **Copy review** | Nobody reads it | A person approves in Telegram first |
+| **Client visibility** | Ask the agency | A live sheet they can open |
+| **Default on failure** | Send anyway | Hold |
+
+<sub>Before/after describes the change in process, not benchmarked throughput. Where a number is not measured, it is not claimed.</sub>
+
+## How it works
+
+Records are pulled in, deduplicated in PostgreSQL, scored and written up by an AI step, logged to a sheet for visibility, then held at a Telegram approval gate before export for delivery.
+
+<table>
+<tr>
+<td width="42" valign="top" align="center"><b>01</b></td><td valign="top"><b>Records come in</b><br>Intake is pulled on a schedule for one client's own instance.</td>
+</tr>
+<tr>
+<td width="42" valign="top" align="center"><b>02</b></td><td valign="top"><b>Duplicates are killed</b><br>Deduplication happens in the database before anything is drafted, so nobody is contacted twice.</td>
+</tr>
+<tr>
+<td width="42" valign="top" align="center"><b>03</b></td><td valign="top"><b>Copy is drafted</b><br>Each interaction is scored and written up rather than dropped into a template.</td>
+</tr>
+<tr>
+<td width="42" valign="top" align="center"><b>04</b></td><td valign="top"><b>The client can see it</b><br>Everything is logged to a sheet, so the client has visibility without access to the workflow.</td>
+</tr>
+<tr>
+<td width="42" valign="top" align="center"><b>05</b></td><td valign="top"><b>A person says yes</b><br>The batch stops at a Telegram approval. If nobody answers, nothing sends.</td>
+</tr>
+<tr>
+<td width="42" valign="top" align="center"><b>06</b></td><td valign="top"><b>Then it delivers</b><br>Only approved records are exported for delivery.</td>
+</tr>
+</table>
+
+### How it flows
+
+<sub>What happens to the client's work, in the order they experience it. The internal build — node graph, execution order, prompts, thresholds — is deliberately not published.</sub>
 
 ```mermaid
 flowchart LR
-    A[Outscraper Intake] --> B[PostgreSQL Dedupe]
-    B --> C[GPT-4o-mini Scoring + Copy]
-    C --> D[Cloudinary Media]
-    D --> E[Telegram Human Approval]
-    E --> F[Instantly Delivery]
+    in(["Customer records come in"])
+    prep["Cleaned, scored, written up"]
+    ap[/"A person approves it"/]
+    go["Approved → delivered"]
+    hold["Not approved → nothing sends"]
 
-    classDef blue fill:#3498db,color:#fff
-    class A,B,C,D,E,F blue
+    in --> prep
+    prep --> ap
+    ap --> go
+    ap -.-> hold
+
+    classDef default fill:#F8F7F3,stroke:#12151B,stroke-width:1px,color:#12151B;
+    classDef ok fill:#2F6B52,stroke:#12151B,stroke-width:1px,color:#F5F4EF;
+    classDef bad fill:#FEE2E2,stroke:#DC2626,stroke-width:1.5px,color:#7F1D1D;
+    class go ok;
+    class hold bad;
 ```
 
-**Data Flow:**
-1. **Intake:** Outscraper provides high-quality lead data
-2. **Dedupe:** PostgreSQL ensures no duplicate customer contacts
-3. **Score:** GPT-4o-mini analyzes interaction patterns and scores leads
-4. **Personalize:** AI generates tailored outreach copy based on scores
-5. **Media:** Cloudinary manages associated media assets
-6. **Approve:** Telegram interface allows human review and approval
-7. **Deliver:** Instantly.ai sends approved messages to customers
+<details>
+<summary><b>What the shapes mean</b> — colour is not the only signal</summary>
 
----
-
-## How It Works
-
-### Step-by-Step Process:
-
-1. **Lead Intake:** Outscraper integration provides high-quality lead data
-2. **Data Cleaning:** PostgreSQL deduplication prevents double-messaging
-3. **AI Scoring:** GPT-4o-mini analyzes customer interaction patterns
-4. **Copy Generation:** AI creates personalized outreach based on scores
-5. **Media Processing:** Cloudinary handles associated images/media
-6. **Human Review:** Telegram interface for one-click approval/rejection
-7. **Quality Control:** Human gate ensures message quality before delivery
-8. **Delivery:** Instantly.ai sends approved messages to customers
-9. **Client Isolation:** Per-client data separation for white-label service
-
-### Technology Stack:
-- **Automation Engine:** n8n Workflow Automation
-- **Lead Generation:** Outscraper integration
-- **Database:** PostgreSQL for deduplication and data management
-- **AI Integration:** GPT-4o-mini for scoring and copy generation
-- **Media Management:** Cloudinary for asset handling
-- **Human Interface:** Telegram Bot for approval workflow
-- **Delivery Platform:** Instantly.ai for email outreach
-- **System Type:** White-Label Review Outreach Pipeline
-
----
-
-## Key Metrics
-
-| Metric | Value |
+| Shape | Means |
 | :--- | :--- |
-| Pipeline Nodes | 21 Distinct Steps |
-| Outreach Accuracy | 100% Deduplicated |
-| Human Approval | Required for All Messages |
-| Client Isolation | Per-Client Deployment |
+| **rounded** | Where the client's process starts |
+| **box** | Something the system does |
+| **diamond** | A decision point |
+| **slanted** | A person has to act |
+| **green box** | The good outcome |
+| **red box** | Failure path — held, escalated or alerted |
+
+Red appears in exactly one role across every repo in this portfolio: where failure goes. Nowhere else. If you see red, something is being held, escalated or alerted.
+</details>
+
+> **Walk it interactively** — [open the demo](https://mdsadrhoman123-stack.github.io/review-outreach-pipeline/) and press **Break it** to watch the failure path light up. Source: [`docs/index.html`](docs/index.html)
+
+## When it breaks
+
+Most automation portfolios show you the happy path. The happy path is the easy half. This is the half that decides whether a system survives contact with a real business.
+
+| What goes wrong | How it is detected | What the system does | Who finds out |
+| :--- | :--- | :--- | :--- |
+| **Same customer appears twice** | PostgreSQL dedup check | Second record dropped before outreach | Nobody — by design |
+| **Copy is wrong or off-tone** | Human reads it at the approval gate | Rejected before send, nothing goes out | The approver decides |
+| **Nobody approves** | Approval never returned | Batch stays held — the default is not to send | Pending items visible in the sheet |
+| **Intake source returns nothing** | Empty result | Run ends without writing, rather than proceeding on empty data | Alert on an empty run |
+| **Export target rejects the batch** | Provider response | Retry, then hold the batch intact | Alert with the batch reference |
+
+The default on an unhandled condition is to **stop and tell someone** — never to continue on a guess. A silent success is the failure mode that costs the most, because nobody goes looking for it.
+
+## The stack
+
+| Component | Why this one |
+| :--- | :--- |
+| **n8n** | Orchestration, isolated per client |
+| **Outscraper** | Record intake |
+| **PostgreSQL** | Deduplication, so nobody is contacted twice |
+| **GPT-4o-mini** | Scores the interaction and drafts the outreach copy |
+| **Cloudinary** | Hosts the review images |
+| **Google Sheets** | Visibility for the client without giving them the workflow |
+| **Telegram** | The approval gate — a person, on their phone, before any send |
+| **Instantly** | Receives the approved export for delivery |
+
+### Counted, not estimated
+
+| | |
+| :--- | :--- |
+| Workflow nodes | **21** |
+| Human approval gates | **1** |
+| Infrastructure | **Isolated per client** |
+
+<sub>These are counts from the built system — nodes, stages, versions, gates. No efficiency percentages are published here without a stated measurement method.</sub>
+
+## Honest limitations
+
+Every design decision costs something. These are the trade-offs in this build, stated by the person who made them.
+
+- The approval gate is deliberately a bottleneck. Throughput is limited by how fast a human answers, which is the correct trade for outreach in a client's name.
+- Per-client isolation means per-client deployment. Better privacy, more instances to maintain.
+- Scoring quality depends on how complete the intake record is. Thin records produce thin copy.
+
+## What is not in this repo
+
+- **Client data.** None, in any form. Not anonymised, not sampled.
+- **Credentials and endpoints.** Never committed. See [`NOTICE.md`](NOTICE.md).
+- **The workflow itself.** No exports, no node graph, no execution order, no prompts, no scoring thresholds, no integration wiring — not sanitised, not partial, not in a screenshot. That is the build, and the build belongs to the engagement that paid for it.
+
+This repository documents *how the problem was thought about* — the failure paths, the trade-offs, the reasoning. That is what tells you whether to hire someone. A copy of the wiring would not.
+
+This is a portfolio repository documenting delivered work. It is not a product you can clone and run against your own accounts.
+
+## Read deeper
+
+| | |
+| :--- | :--- |
+| [01 · The problem](docs/01-problem.md) | The situation before, in full |
+| [02 · The client journey](docs/02-journey.md) | Step by step, from their side |
+| [03 · Architecture](docs/03-architecture.md) | Diagrams and the reasoning |
+| [04 · Failure handling](docs/04-failure-handling.md) | Every path, and where it lands |
+| [05 · The stack](docs/05-stack.md) | What was chosen and what was rejected |
+| [06 · Results](docs/06-results.md) | What is measured and what is not |
+| [07 · Limitations](docs/07-limitations.md) | The trade-offs, in detail |
 
 ---
 
-## Before/After Comparison
+<img src="assets/cta.svg" alt="If a process depends on someone noticing when it breaks, that is the problem I work on." width="100%">
 
-### BEFORE (Manual Outreach - High Risk)
-```
-[Lead List Obtained] 
-    ↓ (manual import)
-[Manual Deduplication] 
-    ↓ (error-prone)
-[Generic Message Writing] 
-    ↓ (no personalization)
-[Manual Sending] 
-    ↓ (slow process)
-[No Quality Control] 
-    ↓
-= **Slow, generic, risk of double-messaging** ❌
-```
+### Tell me what the process is
 
-### AFTER (Automated Pipeline - Quality Assured)
-```
-[Lead List Obtained] 
-    ↓ (Outscraper integration)
-[Automated Deduplication] 
-    ↓ (PostgreSQL logic)
-[AI Scoring + Personalization] 
-    ↓ (GPT-4o-mini)
-[Human Approval Gate] 
-    ↓ (Telegram interface)
-[Automated Delivery] 
-    ↓ (Instantly.ai)
-= **Fast, personalized, quality-assured outreach** ✅
-```
+I will tell you honestly whether automating it is worth your money — including when the answer is no.
 
-**The difference:** AI efficiency with human quality control, ensuring perfect messages every time.
+**K MD SAYAD RAHMAN** — AI Automation Engineer  
+n8n · AI agents · production reliability  
+[LinkedIn](https://www.linkedin.com/in/khandokarsayad) · [More systems](https://github.com/mdsadrhoman123-stack)
 
----
-
-## Impact Statement
-
-**Business Value Delivered:**
-- **100% deduplication** prevents double-messaging and brand damage
-- **AI personalization** improves conversion rates vs generic messaging
-- **Human approval gate** ensures message quality before delivery
-- **White-label ready** for agency productization
-- **Scalable pipeline** handles increased outreach volume
-
-**Client ROI:** White-label solution that agencies can productize while maintaining quality control and brand safety.
-
----
-
-## Non-functional Highlights
-
-**Reliability & Error Handling:**
-- **Explicit Error Handling:** No silent failures, every error triggers an alarm
-- **Deduplication Logic:** PostgreSQL ensures zero double-messaging
-- **Human-in-the-Loop:** Quality control gate before any message delivery
-- **Client Isolation:** Per-client data separation for white-label service
-- **Production-Grade Reliability:** Built for agency-scale operations
-
-**Performance:**
-- **21-node pipeline** handles complex outreach workflows
-- **Parallel processing** where possible for efficiency
-- **Scalable architecture** for increased client volumes
-
-**Quality:**
-- **Mandatory Approval:** Zero messages sent without human review
-- **AI Personalization:** Tailored copy based on interaction scoring
-- **Brand Safety:** Human gate prevents inappropriate messaging
-
----
-
-## Design Decisions
-
-**Why This Architecture:**
-- **21-Node Pipeline:** Comprehensive workflow covers entire outreach lifecycle
-- **Telegram Approval:** Mobile-friendly human interface for quick approvals
-- **GPT-4o-mini:** Cost-effective AI with excellent personalization capabilities
-- **PostgreSQL Deduplication:** Reliable database logic prevents double-messaging
-- **White-Label Design:** Per-client isolation enables agency productization
-
-**Trade-offs:**
-- **Human Gate vs Full Automation:** Quality over speed for brand safety
-- **Complexity vs Capability:** 21 nodes provide comprehensive workflow
-- **Cost vs Quality:** GPT-4o-mini balances cost and personalization quality
-
----
-
-## What I'd Improve
-
-With more time/budget:
-- **Advanced Analytics:** Track conversion rates by message type
-- **A/B Testing:** Test different AI copy approaches
-- **Multi-Channel:** Expand beyond email to SMS, social media
-- **CRM Integration:** Direct integration with client CRM systems
-- **Predictive Scoring:** ML models for lead quality prediction
-
----
-
-## Roadmap
-
-- [ ] **v2.0:** Advanced analytics and conversion tracking
-- [ ] **A/B Testing:** Test different AI copy approaches
-- [ ] **Multi-Channel:** SMS and social media outreach
-- [ ] **CRM Integration:** Direct client CRM connections
-- [ ] **Predictive Scoring:** ML models for lead quality
-
----
-
-## What I'm Not Publishing
-
-For client confidentiality and IP protection, I've deliberately omitted:
-
-- Agency credentials and business logic
-- Production datasets and client outreach lists
-- Specific tenant configurations and Instantly.ai settings
-- Proprietary scoring algorithms and AI prompts
-- Client-specific messaging templates
-- Integration authentication details
-
-**This is a real client system for marketing agencies. White-label confidentiality applies.**
-
----
-
-## FAQ
-
-**Q: How does the deduplication work?**  
-A: PostgreSQL logic ensures no customer is ever messaged twice across all campaigns.
-
-**Q: Why require human approval for AI messages?**  
-A: Quality control gate ensures brand safety and message accuracy before delivery.
-
-**Q: Can this be white-labeled for multiple agencies?**  
-A: Yes, per-client isolation architecture enables multi-tenant deployment.
-
-**Q: What delivery platforms do you support?**  
-A: Currently uses Instantly.ai, can be extended to other email platforms.
-
----
-
-## Contact
-
-**K MD SAYAD RAHMAN** - Sayad.dev | AI Automation
-
-**Work Email:** khandokarsayad@gmail.com  
-**Personal Email:** mdsadrhoman123@gmail.com  
-**LinkedIn:** https://linkedin.com/in/khandokarsabbir  
-**GitHub:** https://github.com/mdsadrhoman123-stack
-
-**Open to Work - Accepting New Automation Projects**
-
-**Email me with your automation challenge - I'll tell you exactly 
-which part I'd automate first, and which part I wouldn't.**
-
----
-
-## See My Other Automation Systems
-
-- [Real Estate AI Automation](../distressed-property-detection) - Property deal detection
-- [M&A Deal-Flow Automation](../edugrow-ma-platform) - M&A advisory systems
-- [Healthcare Document Automation](../medical-document-automation) - Medical records processing
-- [Solar CRM Automation](../irish-solar-crm) - Field service business systems
-
----
-
-<div align="center">
-
-**Built by K MD SAYAD RAHMAN (Sayad.dev | AI Automation)**
-
-**Contact:** khandokarsayad@gmail.com | mdsadrhoman123@gmail.com
-
-Copyright (c) 2024 K MD SAYAD RAHMAN. All rights reserved. Portfolio use only.
-
-*[n8n](https://n8n.io) | [GPT-4o-mini](https://openai.com) | [E-commerce Automation](https://linkedin.com/in/khandokarsabbir)*
-
-</div>
