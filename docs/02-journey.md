@@ -1,6 +1,6 @@
-# 02 · The client journey
+# 02 · The journey
 
-What this looks like from the outside, for **White-label / agency delivery**.
+What this looks like from the outside, for **Agencies delivering white-label to their own clients**.
 
 ---
 

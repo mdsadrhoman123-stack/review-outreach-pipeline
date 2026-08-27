@@ -1,6 +1,6 @@
 # 01 · The problem
 
-**Review Outreach Pipeline** — White-label / agency delivery
+**Review Outreach Pipeline** — the problem, as Agencies delivering white-label to their own clients describe it
 
 ---
 
@@ -22,4 +22,4 @@ Records are pulled in, deduplicated in PostgreSQL, scored and written up by an A
 
 ---
 
-[← README](../README.md) · [02 · The client journey →](02-journey.md)
+[← README](../README.md) · [02 · The journey →](02-journey.md)

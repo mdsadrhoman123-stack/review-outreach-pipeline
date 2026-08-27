@@ -29,6 +29,12 @@ header.hero{background:var(--ink);color:#F5F4EF;padding:76px 0 68px;
 header.hero h1{font-size:clamp(38px,6vw,64px);line-height:1.03;margin:0 0 20px}
 header.hero p.promise{font-size:19px;line-height:1.55;color:#C6CFDB;
   max-width:60ch;margin:0 0 30px}
+/* The demo is a single file — someone may well open it with no README in
+   sight, so the provenance has to travel with it. */
+header.hero p.prov{font-size:14px;line-height:1.62;color:#8A94A3;
+  max-width:66ch;margin:24px 0 0;border-left:2px solid #2E3542;
+  padding-left:14px}
+header.hero p.prov b{color:#C6CFDB}
 .meta{display:flex;flex-wrap:wrap;gap:10px}
 .pill{font-size:12px;letter-spacing:.4px;padding:6px 12px;border-radius:999px;
   border:1px solid #2E3542;color:#A9B3C1}
@@ -135,10 +141,15 @@ a{color:var(--green)}
     <h1>Review Outreach Pipeline</h1>
     <p class="promise">Customer records are cleaned, scored and turned into outreach copy — then a human approves in Telegram before anything sends.</p>
     <div class="meta">
-      <span class="pill ok">delivered to client</span>
+      <span class="pill ok">running on my own n8n</span>
       <span class="pill">E-commerce / reviews</span>
-      <span class="pill">Built for White-label / agency delivery</span>
+      <span class="pill">For Agencies delivering white-label to their own clients</span>
+      <span class="pill">Ready to deploy</span>
     </div>
+    <p class="prov">Built from a real brief — businesses in this sector post
+    this problem publicly, in their own words, and I built a system for the
+    problem exactly as stated. It is production-grade and runs on my own infrastructure.
+    <b>It has not been sold or deployed into a customer's business: it is available, not delivered.</b></p>
   </div>
 </header>
 
@@ -219,7 +230,7 @@ a{color:var(--green)}
 </footer>
 
 <script>
-var DATA = {"nodes": [{"id": "in", "label": "Customer records come in", "kind": "trigger"}, {"id": "prep", "label": "Cleaned, scored, written up", "kind": "step"}, {"id": "ap", "label": "A person approves it", "kind": "human"}, {"id": "go", "label": "Approved → delivered", "kind": "success"}, {"id": "hold", "label": "Not approved → nothing sends", "kind": "fail"}], "edges": [{"a": "in", "b": "prep"}, {"a": "prep", "b": "ap"}, {"a": "ap", "b": "go"}, {"a": "ap", "b": "hold"}], "fails": [{"what": "Same customer appears twice", "detect": "PostgreSQL dedup check", "does": "Second record dropped before outreach", "who": "Nobody — by design"}, {"what": "Copy is wrong or off-tone", "detect": "Human reads it at the approval gate", "does": "Rejected before send, nothing goes out", "who": "The approver decides"}, {"what": "Nobody approves", "detect": "Approval never returned", "does": "Batch stays held — the default is not to send", "who": "Pending items visible in the sheet"}, {"what": "Intake source returns nothing", "detect": "Empty result", "does": "Run ends without writing, rather than proceeding on empty data", "who": "Alert on an empty run"}, {"what": "Export target rejects the batch", "detect": "Provider response", "does": "Retry, then hold the batch intact", "who": "Alert with the batch reference"}], "journey": [{"h": "Records come in", "b": "Intake is pulled on a schedule for one client's own instance."}, {"h": "Duplicates are killed", "b": "Deduplication happens in the database before anything is drafted, so nobody is contacted twice."}, {"h": "Copy is drafted", "b": "Each interaction is scored and written up rather than dropped into a template."}, {"h": "The client can see it", "b": "Everything is logged to a sheet, so the client has visibility without access to the workflow."}, {"h": "A person says yes", "b": "The batch stops at a Telegram approval. If nobody answers, nothing sends."}, {"h": "Then it delivers", "b": "Only approved records are exported for delivery."}], "name": "Review Outreach Pipeline", "eyebrow": "Per-client outreach, human-approved", "promise": "Customer records are cleaned, scored and turned into outreach copy — then a human approves in Telegram before anything sends.", "client": "White-label / agency delivery", "status": "delivered to client", "metrics": [["Workflow nodes", "21"], ["Human approval gates", "1"], ["Infrastructure", "Isolated per client"]]};
+var DATA = {"nodes": [{"id": "in", "label": "Customer records come in", "kind": "trigger"}, {"id": "prep", "label": "Cleaned, scored, written up", "kind": "step"}, {"id": "ap", "label": "A person approves it", "kind": "human"}, {"id": "go", "label": "Approved → delivered", "kind": "success"}, {"id": "hold", "label": "Not approved → nothing sends", "kind": "fail"}], "edges": [{"a": "in", "b": "prep"}, {"a": "prep", "b": "ap"}, {"a": "ap", "b": "go"}, {"a": "ap", "b": "hold"}], "fails": [{"what": "Same customer appears twice", "detect": "PostgreSQL dedup check", "does": "Second record dropped before outreach", "who": "Nobody — by design"}, {"what": "Copy is wrong or off-tone", "detect": "Human reads it at the approval gate", "does": "Rejected before send, nothing goes out", "who": "The approver decides"}, {"what": "Nobody approves", "detect": "Approval never returned", "does": "Batch stays held — the default is not to send", "who": "Pending items visible in the sheet"}, {"what": "Intake source returns nothing", "detect": "Empty result", "does": "Run ends without writing, rather than proceeding on empty data", "who": "Alert on an empty run"}, {"what": "Export target rejects the batch", "detect": "Provider response", "does": "Retry, then hold the batch intact", "who": "Alert with the batch reference"}], "journey": [{"h": "Records come in", "b": "Intake is pulled on a schedule for one client's own instance."}, {"h": "Duplicates are killed", "b": "Deduplication happens in the database before anything is drafted, so nobody is contacted twice."}, {"h": "Copy is drafted", "b": "Each interaction is scored and written up rather than dropped into a template."}, {"h": "The client can see it", "b": "Everything is logged to a sheet, so the client has visibility without access to the workflow."}, {"h": "A person says yes", "b": "The batch stops at a Telegram approval. If nobody answers, nothing sends."}, {"h": "Then it delivers", "b": "Only approved records are exported for delivery."}], "name": "Review Outreach Pipeline", "eyebrow": "Per-client outreach, human-approved", "promise": "Customer records are cleaned, scored and turned into outreach copy — then a human approves in Telegram before anything sends.", "audience": "Agencies delivering white-label to their own clients", "status": "running on my own n8n", "metrics": [["Workflow nodes", "21"], ["Human approval gates", "1"], ["Infrastructure", "Isolated per client"]]};
 
 var flow = document.getElementById('flow');
 DATA.nodes.forEach(function(n, i){
