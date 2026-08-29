@@ -23,7 +23,7 @@
 
 ### On this page
 
-[The problem](#the-problem) · [What changed](#what-changed) · [How it works](#how-it-works) · [When it breaks](#when-it-breaks) · [The stack](#the-stack) · [Limitations](#honest-limitations) · [What is here](#what-is-in-this-repository) · [Read deeper](#read-deeper)
+[The problem](#the-problem) · [What changed](#what-changed) · [How it works](#how-it-works) · [The shape of it](#the-shape-of-the-system) · [When it breaks](#when-it-breaks) · [Why this way](#why-it-is-built-this-way) · [Limitations](#honest-limitations) · [What is here](#what-is-in-this-repository) · [Read deeper](#read-deeper)
 
 ---
 
@@ -113,6 +113,55 @@ Red appears in exactly one role across every repo in this portfolio: where failu
 
 > **Walk it interactively** — [`docs/index.html`](docs/index.html) is a single self-contained page. Download it, open it in any browser, and press **Break it** to watch the failure path light up. Nothing to install, no network calls.
 
+## The shape of the system
+
+Parts and the role each one plays. Not the wiring — no execution order, no prompt text, no thresholds. That is a deliberate line, and the last branch of the tree names exactly what sits on the other side of it.
+
+```text
+Review Outreach Pipeline — the running system
+│
+├── Interfaces ...................... the systems it talks to
+│   ├── Outscraper .................. Record intake
+│   ├── Cloudinary .................. Hosts the review images
+│   ├── Google Sheets ............... Visibility for the client without giving them the workflow
+│   └── Instantly ................... Receives the approved export for delivery
+│
+├── Judgement ....................... where a decision or a piece of writing is made
+│   └── GPT-4o-mini ................. Scores the interaction and drafts the outreach copy
+│
+├── Memory .......................... what is remembered, and for how long
+│   └── PostgreSQL .................. Deduplication, so nobody is contacted twice
+│
+├── Oversight ....................... how a human stays in the loop
+│   └── Telegram .................... The approval gate — a person, on their phone, before any send
+│
+├── Ground .......................... what the whole thing runs on
+│   └── n8n ......................... Orchestration, isolated per client
+│
+├── Failure design .................. 5 paths, designed before the features
+│   ├── detected by ................. an error output, a timer, or a failed connection
+│   ├── handled by .................. falling back, holding, or halting — never guessing
+│   └── announced to ................ a named person, with the reason attached
+│
+└── Not in this repository .......... the part that would let you skip the thinking
+    ├── the node graph .............. which part runs after which, and on what condition
+    ├── the prompts ................. wording, guardrails, the shape of the output
+    ├── the thresholds .............. what counts as urgent, late, at capacity, a match
+    └── the credentials ............. never committed, in any form, at any point
+```
+
+Read it as a set of decisions rather than a parts list. Every part is there because a specific failure or a specific constraint put it there, and the two sections below are the same story told twice: **When it breaks** is what each part is defending against, and **Honest limitations** is what it costs to have chosen that part and not another.
+
+### Counted, not estimated
+
+| | |
+| :--- | :--- |
+| Workflow nodes | **21** |
+| Human approval gates | **1** |
+| Infrastructure | **Isolated per client** |
+
+<sub>These are counts from the built system — nodes, stages, versions, gates. No efficiency percentages are published here without a stated measurement method.</sub>
+
 ## When it breaks
 
 Most automation portfolios show you the happy path. The happy path is the easy half. This is the half that decides whether a system survives contact with a real business.
@@ -127,28 +176,44 @@ Most automation portfolios show you the happy path. The happy path is the easy h
 
 The default on an unhandled condition is to **stop and tell someone** — never to continue on a guess. A silent success is the failure mode that costs the most, because nobody goes looking for it.
 
-## The stack
+## Why it is built this way
 
-| Component | Why this one |
-| :--- | :--- |
-| **n8n** | Orchestration, isolated per client |
-| **Outscraper** | Record intake |
-| **PostgreSQL** | Deduplication, so nobody is contacted twice |
-| **GPT-4o-mini** | Scores the interaction and drafts the outreach copy |
-| **Cloudinary** | Hosts the review images |
-| **Google Sheets** | Visibility for the client without giving them the workflow |
-| **Telegram** | The approval gate — a person, on their phone, before any send |
-| **Instantly** | Receives the approved export for delivery |
+Three decisions, each with the option that was turned down and the price of turning it down. A choice with no cost attached to it was not a choice — it was a default, and defaults are not worth reading about.
 
-### Counted, not estimated
+<details open>
+<summary><b>Why a person approves every send</b></summary>
 
-| | |
-| :--- | :--- |
-| Workflow nodes | **21** |
-| Human approval gates | **1** |
-| Infrastructure | **Isolated per client** |
+**What it does.** Nothing leaves in the client's name until someone has said yes, on their phone, at a Telegram gate.
 
-<sub>These are counts from the built system — nodes, stages, versions, gates. No efficiency percentages are published here without a stated measurement method.</sub>
+**What was turned down.** Automatic sending with a review of a sample afterwards. Much higher throughput — and by the time you read the sample the wrong message has already arrived in a real customer's inbox.
+
+**What that costs.** Throughput is bounded by how fast a human answers. A deliberate bottleneck, and the correct trade for outreach that carries someone else's name.
+
+</details>
+
+<details>
+<summary><b>Why the client gets a sheet instead of access to the pipeline</b></summary>
+
+**What it does.** A spreadsheet is written on every run, so the client can see what happened without being handed the automation.
+
+**What was turned down.** Giving the client the workflow itself. Total transparency — and one accidental edit takes the pipeline down, at which point the outage is the client's and the blame is the engineer's.
+
+**What that costs.** The sheet is a copy of state rather than the state itself, so it has to be written to on every run and can lag if a run fails.
+
+</details>
+
+<details>
+<summary><b>Why deduplication is in a database, not the spreadsheet</b></summary>
+
+**What it does.** Contact history lives in PostgreSQL, so the same person is never approached twice.
+
+**What was turned down.** Checking the sheet before sending. One less component to run — and a spreadsheet has no constraint that can refuse a duplicate row, so the check is advisory rather than enforced.
+
+**What that costs.** Per-client isolation means per-client deployment: better privacy, more instances to maintain. Scoring quality still depends on how complete the intake record is — a thin record produces thin copy.
+
+</details>
+
+Every cost above also appears in **Honest limitations** below. It is there twice on purpose: once as the reasoning, once as the consequence, so neither can be quietly dropped from the other.
 
 ## Honest limitations
 
@@ -160,36 +225,40 @@ Every design decision costs something. These are the trade-offs in this build, s
 
 ## What is in this repository
 
+Every file, and the question it answers. Same layout in all eleven repositories in this portfolio, so the second one you open needs no orientation at all.
+
 ```text
 review-outreach-pipeline/
-├── README.md                      ← you are here
-├── SECURITY.md                    # how to report something that should not be public
-├── NOTICE.md                      # what is withheld, and why
-├── LICENSE                        # covers the documentation, not a software grant
+├── README.md ....................... ← you are here
+├── SECURITY.md ..................... how to report something that should not be public
+├── NOTICE.md ....................... what is withheld, and why
+├── LICENSE ......................... covers the documentation, not a software grant
 │
-├── docs/
-│   ├── index.html                 # the interactive demo — one file, opens with no network
-│   ├── 01-problem.md              # the situation before, in full
-│   ├── 02-journey.md              # step by step, from their side
-│   ├── 03-architecture.md         # the diagrams and the reasoning
-│   ├── 04-failure-handling.md     # every failure path, and where it lands
-│   ├── 05-stack.md                # what was chosen, and what was rejected
-│   ├── 06-results.md              # what is measured, and what is not
-│   └── 07-limitations.md          # the trade-offs, in detail
+├── docs/ ........................... the long form — read in order or not at all
+│   ├── index.html .................. the interactive demo, one file, no network
+│   ├── 01-problem.md ............... the situation before, in full
+│   ├── 02-journey.md ............... step by step, from their side
+│   ├── 03-architecture.md .......... the diagrams, and why they are shaped that way
+│   ├── 04-failure-handling.md ...... every failure path, and where it lands
+│   ├── 05-stack.md ................. each choice, the option turned down, the cost
+│   ├── 06-results.md ............... what is measured, and what is deliberately not
+│   └── 07-limitations.md ........... the trade-offs, in detail
 │
-├── diagrams/
-│   ├── pipeline-lr.mmd            # the client-level flow, left to right
-│   └── pipeline-tb.mmd            # the same flow, top to bottom
+├── diagrams/ ....................... source, so the flow can be re-rendered
+│   ├── pipeline-lr.mmd ............. the client-level flow, left to right
+│   └── pipeline-tb.mmd ............. the same flow, top to bottom
 │
-├── assets/                        # banner and closing card, SVG, no CDN
+├── assets/ ......................... SVG only — nothing loaded from a CDN
+│   ├── banner.svg .................. the header on this page
+│   └── cta.svg ..................... the closing card
 │
-├── workflows/
-│   └── README.md                  # empty on purpose — see below
+├── workflows/ ...................... empty on purpose — see below
+│   └── README.md ................... why it is empty, in writing
 │
-└── .github/
-    ├── honesty-check.py           # the claim linter behind the badge
+└── .github/ ........................ the badge at the top of this page
+    ├── honesty-check.py ............ the claim linter it runs
     └── workflows/
-        └── honesty-check.yml      # runs it on every push
+        └── honesty-check.yml ....... runs it on every push
 ```
 
 There is no `src/` in that tree, and no `workflows/*.json`. That is not an omission — it is the design, and the next section says exactly what is being withheld and why.
